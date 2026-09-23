@@ -369,5 +369,3 @@ backup-before-changes.tar.gz
 videoGameCharacterApi/wwwroot/uploads/*
 !videoGameCharacterApi/wwwroot/uploads/.gitkeep
 
-# Files saved by the Claude app
-Claude outputs/
