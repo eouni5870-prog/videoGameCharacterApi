@@ -368,3 +368,6 @@ backup-before-changes.tar.gz
 # Uploaded pictures (keep the folder)
 videoGameCharacterApi/wwwroot/uploads/*
 !videoGameCharacterApi/wwwroot/uploads/.gitkeep
+
+# Files saved by the Claude app
+Claude outputs/
