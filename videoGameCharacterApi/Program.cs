@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -51,6 +51,18 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 
+// CORS: allow the React frontend (Vite dev server) to call the API
+const string FrontendCorsPolicy = "Frontend";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(FrontendCorsPolicy, policy =>
+        policy.WithOrigins(
+                builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                ?? ["http://localhost:5173"])
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 // Seed starter data in Development (only when the tables are empty)
@@ -59,6 +71,7 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await SeedData.SeedAsync(db);
+    await SeedData.FixOldCharactersAsync(db);
 }
 
 // ---------- HTTP pipeline ----------
@@ -76,6 +89,11 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors(FrontendCorsPolicy);
+
+// Serves the uploaded pictures from wwwroot/uploads
+app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();

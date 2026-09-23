@@ -364,3 +364,7 @@ FodyWeavers.xsd
 # Local cleanup / backups
 _to_delete/
 backup-before-changes.tar.gz
+
+# Uploaded pictures (keep the folder)
+videoGameCharacterApi/wwwroot/uploads/*
+!videoGameCharacterApi/wwwroot/uploads/.gitkeep

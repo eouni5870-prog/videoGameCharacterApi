@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using videoGameCharacterApi.Models;
 
 namespace videoGameCharacterApi.Data;
@@ -42,6 +42,45 @@ public static class SeedData
             new Character { Name = "Sephiroth", Role = "Villain", Level = 99, Game = ff7,
                 Description = "A legendary SOLDIER turned destroyer of the Planet." }
         );
+
+        await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// One-time fix for the 3 old characters that were created without a name / role.
+    /// Only touches characters 1, 2 and 3 when their name is still empty or "EYA", so it runs only once.
+    /// </summary>
+    public static async Task FixOldCharactersAsync(AppDbContext context)
+    {
+        var old = await context.Characters
+            .Where(c => c.Id <= 3 && (c.Name == "" || c.Name == "EYA"))
+            .ToListAsync();
+        if (old.Count == 0)
+            return;
+
+        var game = await context.Games.FindAsync(1);
+        if (game is not null)
+        {
+            game.Name = "Super Mario Bros.";
+            game.Genre = "Platformer";
+            game.ReleaseYear = 1985;
+        }
+
+        var data = new Dictionary<int, (string Name, string Role, int Level, string Description)>
+        {
+            [1] = ("Mario", "Hero", 50, "Le plombier moustachu qui saute sur les ennemis pour sauver le Royaume Champignon."),
+            [2] = ("Bowser", "Villain", 70, "Le roi des Koopas, qui essaie toujours d'enlever la princesse Peach."),
+            [3] = ("Princesse Peach", "Support", 45, "La princesse du Royaume Champignon, qui aide Mario dans ses aventures."),
+        };
+
+        foreach (var c in old)
+        {
+            if (!data.TryGetValue(c.Id, out var d)) continue;
+            c.Name = d.Name;
+            c.Role = d.Role;
+            c.Level = d.Level;
+            c.Description = d.Description;
+        }
 
         await context.SaveChangesAsync();
     }
