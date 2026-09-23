@@ -1,7 +1,68 @@
-@videoGameCharacterApi_HostAddress = http://localhost:5021
+@host = http://localhost:5021
+# 1) Run "Login" (or "Register"), then paste the token here:
+@token = PASTE_TOKEN_HERE
 
-GET {{videoGameCharacterApi_HostAddress}}/weatherforecast/
-Accept: application/json
+### Register
+POST {{host}}/api/auth/register
+Content-Type: application/json
 
-###
-=
+{ "username": "player1", "password": "secret123" }
+
+### Login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "username": "player1", "password": "secret123" }
+
+### All games
+GET {{host}}/api/games
+
+### Characters: page 1, 5 per page
+GET {{host}}/api/videogamecharacters?page=1&pageSize=5
+
+### Characters: filter by game + role
+GET {{host}}/api/videogamecharacters?game=zelda&role=hero
+
+### Characters: search by name
+GET {{host}}/api/videogamecharacters?search=cloud
+
+### One character
+GET {{host}}/api/videogamecharacters/1
+
+### Create a character (needs token)
+POST {{host}}/api/videogamecharacters
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Luigi",
+  "role": "Hero",
+  "description": "Mario's younger brother.",
+  "level": 45,
+  "gameId": 1
+}
+
+### Validation error example (empty name -> 400)
+POST {{host}}/api/videogamecharacters
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "", "role": "Hero", "gameId": 1 }
+
+### Update a character (needs token)
+PUT {{host}}/api/videogamecharacters/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Mario", "role": "Hero", "level": 55, "gameId": 1 }
+
+### Delete a character (needs token)
+DELETE {{host}}/api/videogamecharacters/11
+Authorization: Bearer {{token}}
+
+### Create a game (needs token)
+POST {{host}}/api/games
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "name": "Hollow Knight", "genre": "Metroidvania", "releaseYear": 2017 }

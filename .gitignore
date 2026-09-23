@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Local cleanup / backups
+_to_delete/
+backup-before-changes.tar.gz
