@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using videoGameCharacterApi.Dtos;
-using videoGameCharacterApi.Exceptions;
 using videoGameCharacterApi.Services;
 using videoGameCharacterApi.Settings;
 
@@ -29,10 +28,22 @@ public class AuthServiceTests
         var registered = await service.RegisterAsync(new RegisterRequest { Username = "player1", Password = "secret123" });
         var loggedIn = await service.LoginAsync(new LoginRequest { Username = "PLAYER1", Password = "secret123" });
 
-        Assert.False(string.IsNullOrWhiteSpace(registered.Token));
+        Assert.Equal(RegisterStatus.Success, registered.Status);
+        Assert.False(string.IsNullOrWhiteSpace(registered.Response!.Token));
         Assert.NotNull(loggedIn);
         Assert.False(string.IsNullOrWhiteSpace(loggedIn!.Token));
         Assert.True(loggedIn.ExpiresAt > DateTime.UtcNow);
+    }
+
+    [Fact]
+    public async Task Register_NewAccount_IsNormalUser()
+    {
+        using var db = TestDb.Create();
+
+        var result = await CreateService(db).RegisterAsync(new RegisterRequest { Username = "player1", Password = "secret123" });
+
+        Assert.Equal(Models.Roles.User, result.Response!.Role);
+        Assert.Equal(Models.Roles.User, Assert.Single(db.Users).Role);
     }
 
     [Fact]
@@ -57,13 +68,37 @@ public class AuthServiceTests
     }
 
     [Fact]
-    public async Task Register_WithTakenUsername_ThrowsBadRequest()
+    public async Task Register_WithTakenUsername_ReturnsUsernameTaken()
     {
         using var db = TestDb.Create();
         var service = CreateService(db);
         await service.RegisterAsync(new RegisterRequest { Username = "player1", Password = "secret123" });
 
-        await Assert.ThrowsAsync<BadRequestException>(() =>
-            service.RegisterAsync(new RegisterRequest { Username = "Player1", Password = "another123" }));
+        var result = await service.RegisterAsync(new RegisterRequest { Username = "Player1", Password = "another123" });
+
+        Assert.Equal(RegisterStatus.UsernameTaken, result.Status);
+        Assert.Null(result.Response);
+        Assert.Single(db.Users);
+    }
+
+    [Fact]
+    public async Task Register_WithTooShortTrimmedUsername_ReturnsInvalidUsername()
+    {
+        using var db = TestDb.Create();
+
+        var result = await CreateService(db).RegisterAsync(new RegisterRequest { Username = "  ab  ", Password = "secret123" });
+
+        Assert.Equal(RegisterStatus.InvalidUsername, result.Status);
+        Assert.Empty(db.Users);
+    }
+
+    [Fact]
+    public async Task Register_TrimsUsername()
+    {
+        using var db = TestDb.Create();
+
+        await CreateService(db).RegisterAsync(new RegisterRequest { Username = "  player1  ", Password = "secret123" });
+
+        Assert.Equal("player1", Assert.Single(db.Users).Username);
     }
 }

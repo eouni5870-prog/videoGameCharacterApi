@@ -12,4 +12,10 @@ public class GameRequest
 
     [Range(1950, 2100)]
     public int ReleaseYear { get; set; }
+
+    [Range(0, 1000)]
+    public decimal Price { get; set; }
+
+    [Url, MaxLength(500)]
+    public string? CoverUrl { get; set; }
 }

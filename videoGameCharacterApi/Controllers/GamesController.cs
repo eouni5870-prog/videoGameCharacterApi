@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using videoGameCharacterApi.Dtos;
+using videoGameCharacterApi.Models;
 using videoGameCharacterApi.Services;
 
 namespace videoGameCharacterApi.Controllers;
@@ -27,6 +28,7 @@ public class GamesController(IGameService service) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult<GameResponse>> AddGame(GameRequest game)
     {
         var created = await service.AddGameAsync(game);
@@ -34,6 +36,7 @@ public class GamesController(IGameService service) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult> UpdateGame(int id, GameRequest game)
     {
         var updated = await service.UpdateGameAsync(id, game);
@@ -44,6 +47,7 @@ public class GamesController(IGameService service) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult> DeleteGame(int id)
     {
         var deleted = await service.DeleteGameAsync(id);

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using videoGameCharacterApi.Models;
 
 namespace videoGameCharacterApi.Controllers;
 
@@ -9,7 +10,7 @@ namespace videoGameCharacterApi.Controllers;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize(Roles = Roles.Admin)]
 public class UploadsController(IWebHostEnvironment env) : ControllerBase
 {
     private const long MaxFileSize = 5 * 1024 * 1024; // 5 MB

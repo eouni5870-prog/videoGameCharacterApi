@@ -1,13 +1,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using videoGameCharacterApi.Dtos;
+using videoGameCharacterApi.Models;
 using videoGameCharacterApi.Services;
 
 namespace videoGameCharacterApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize] // create / update / delete need a JWT token
+[Authorize] // create / update / delete: admins only
 public class VideoGameCharactersController(IVideoGameCharacterService service) : ControllerBase
 {
     // GET /api/VideoGameCharacters?game=zelda&role=hero&search=li&page=1&pageSize=10
@@ -30,6 +31,7 @@ public class VideoGameCharactersController(IVideoGameCharacterService service) :
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult<CharacterResponse>> AddCharacter(CreateCharacterRequest character)
     {
         var createdCharacter = await service.AddCharacterAsync(character);
@@ -38,6 +40,7 @@ public class VideoGameCharactersController(IVideoGameCharacterService service) :
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult> UpdateCharacter(int id, UpdateCharacterRequest character)
     {
         var updated = await service.UpdateCharacterAsync(id, character);
@@ -48,6 +51,7 @@ public class VideoGameCharactersController(IVideoGameCharacterService service) :
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult> DeleteCharacter(int id)
     {
         var deleted = await service.DeleteCharacterAsync(id);

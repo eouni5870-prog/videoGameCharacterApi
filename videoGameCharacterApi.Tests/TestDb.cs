@@ -22,4 +22,20 @@ public static class TestDb
         await db.SaveChangesAsync();
         return game;
     }
+
+    public static async Task<User> AddUserAsync(AppDbContext db, string username = "player1")
+    {
+        var user = new User { Username = username, PasswordHash = "hash" };
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        return user;
+    }
+
+    public static async Task<Character> AddCharacterAsync(AppDbContext db, int gameId, string name = "Hero")
+    {
+        var character = new Character { Name = name, Role = "Hero", GameId = gameId };
+        db.Characters.Add(character);
+        await db.SaveChangesAsync();
+        return character;
+    }
 }

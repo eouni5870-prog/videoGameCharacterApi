@@ -147,4 +147,37 @@ public class VideoGameCharacterServiceTests
         Assert.Null(await service.GetCharacterByIdAsync(character.Id));
         Assert.False(await service.DeleteCharacterAsync(character.Id));
     }
+
+    [Fact]
+    public async Task AddCharacter_SavesStats()
+    {
+        using var db = TestDb.Create();
+        var game = await TestDb.AddGameAsync(db);
+
+        var result = await CreateService(db).AddCharacterAsync(new CreateCharacterRequest
+        {
+            Name = "Kratos", Role = "Hero", GameId = game.Id,
+            Strength = 95, Speed = 60, Magic = 30, Defense = 85
+        });
+
+        Assert.Equal((95, 60, 30, 85), (result.Strength, result.Speed, result.Magic, result.Defense));
+    }
+
+    [Fact]
+    public async Task FillMissingStats_GivesStatsOnlyToCharactersWithoutThem()
+    {
+        using var db = TestDb.Create();
+        var game = await TestDb.AddGameAsync(db);
+        db.Characters.AddRange(
+            new Character { Name = "Old", Role = "Hero", Level = 50, GameId = game.Id },
+            new Character { Name = "New", Role = "Hero", Level = 50, GameId = game.Id, Strength = 1, Speed = 2, Magic = 3, Defense = 4 });
+        await db.SaveChangesAsync();
+
+        await Data.SeedData.FillMissingStatsAsync(db);
+
+        var old = db.Characters.Single(c => c.Name == "Old");
+        var kept = db.Characters.Single(c => c.Name == "New");
+        Assert.True(old.Strength > 0 && old.Speed > 0 && old.Magic > 0 && old.Defense > 0);
+        Assert.Equal((1, 2, 3, 4), (kept.Strength, kept.Speed, kept.Magic, kept.Defense));
+    }
 }

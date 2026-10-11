@@ -21,6 +21,10 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IVideoGameCharacterService, VideoGameCharacterService>();
 builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IFavoriteService, FavoriteService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 // Global error handling -> every error comes back as ProblemDetails JSON
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -72,6 +76,10 @@ if (app.Environment.IsDevelopment())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await SeedData.SeedAsync(db);
     await SeedData.FixOldCharactersAsync(db);
+    await SeedData.AddMoreCharactersAsync(db);
+    await SeedData.FillMissingStatsAsync(db);
+    await SeedData.SetMissingPricesAsync(db);
+    await SeedData.EnsureAdminAsync(db);
 }
 
 // ---------- HTTP pipeline ----------

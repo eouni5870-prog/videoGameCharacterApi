@@ -7,5 +7,9 @@ public class Game
     public string Genre { get; set; } = string.Empty;
     public int ReleaseYear { get; set; }
 
+    // Shop
+    public decimal Price { get; set; }
+    public string? CoverUrl { get; set; }
+
     public List<Character> Characters { get; set; } = [];
 }

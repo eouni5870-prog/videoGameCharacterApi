@@ -11,7 +11,8 @@ namespace videoGameCharacterApi.Services
         : IVideoGameCharacterService
     {
         // One mapping used by every query, so EF translates it straight to SQL.
-        private static readonly Expression<Func<Character, CharacterResponse>> ToResponse = c => new CharacterResponse
+        // Internal so the favorites service can reuse it.
+        internal static readonly Expression<Func<Character, CharacterResponse>> ToResponse = c => new CharacterResponse
         {
             Id = c.Id,
             Name = c.Name,
@@ -19,9 +20,16 @@ namespace videoGameCharacterApi.Services
             Description = c.Description,
             ImageUrl = c.ImageUrl,
             Level = c.Level,
+            Strength = c.Strength,
+            Speed = c.Speed,
+            Magic = c.Magic,
+            Defense = c.Defense,
             CreatedAt = c.CreatedAt,
             GameId = c.GameId,
-            GameName = c.Game.Name
+            GameName = c.Game.Name,
+            AverageRating = c.Reviews.Select(r => (double?)r.Rating).Average(),
+            ReviewCount = c.Reviews.Count,
+            FavoriteCount = c.Favorites.Count
         };
 
         public async Task<PagedResult<CharacterResponse>> GetCharactersAsync(CharacterQuery query)
@@ -85,6 +93,10 @@ namespace videoGameCharacterApi.Services
                 Description = character.Description,
                 ImageUrl = character.ImageUrl,
                 Level = character.Level,
+                Strength = character.Strength,
+                Speed = character.Speed,
+                Magic = character.Magic,
+                Defense = character.Defense,
                 GameId = character.GameId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -110,6 +122,10 @@ namespace videoGameCharacterApi.Services
             existingCharacter.Description = character.Description;
             existingCharacter.ImageUrl = character.ImageUrl;
             existingCharacter.Level = character.Level;
+            existingCharacter.Strength = character.Strength;
+            existingCharacter.Speed = character.Speed;
+            existingCharacter.Magic = character.Magic;
+            existingCharacter.Defense = character.Defense;
             existingCharacter.GameId = character.GameId;
 
             await context.SaveChangesAsync();

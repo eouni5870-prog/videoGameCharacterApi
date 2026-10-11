@@ -22,5 +22,17 @@ namespace videoGameCharacterApi.Dtos
 
         [Range(1, int.MaxValue, ErrorMessage = "GameId is required.")]
         public int GameId { get; set; }
+
+        [Range(0, 100)]
+        public int Strength { get; set; } = 50;
+
+        [Range(0, 100)]
+        public int Speed { get; set; } = 50;
+
+        [Range(0, 100)]
+        public int Magic { get; set; } = 50;
+
+        [Range(0, 100)]
+        public int Defense { get; set; } = 50;
     }
 }

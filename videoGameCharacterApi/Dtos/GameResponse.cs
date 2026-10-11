@@ -7,4 +7,6 @@ public class GameResponse
     public string Genre { get; set; } = string.Empty;
     public int ReleaseYear { get; set; }
     public int CharacterCount { get; set; }
+    public decimal Price { get; set; }
+    public string? CoverUrl { get; set; }
 }

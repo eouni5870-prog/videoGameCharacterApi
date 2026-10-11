@@ -15,7 +15,9 @@ public class GameService(AppDbContext context, ILogger<GameService> logger) : IG
         Name = g.Name,
         Genre = g.Genre,
         ReleaseYear = g.ReleaseYear,
-        CharacterCount = g.Characters.Count
+        CharacterCount = g.Characters.Count,
+        Price = g.Price,
+        CoverUrl = g.CoverUrl
     };
 
     public async Task<List<GameResponse>> GetAllGamesAsync()
@@ -29,7 +31,14 @@ public class GameService(AppDbContext context, ILogger<GameService> logger) : IG
         var name = game.Name.Trim();
         await EnsureNameIsFreeAsync(name, exceptId: null);
 
-        var newGame = new Game { Name = name, Genre = game.Genre.Trim(), ReleaseYear = game.ReleaseYear };
+        var newGame = new Game
+        {
+            Name = name,
+            Genre = game.Genre.Trim(),
+            ReleaseYear = game.ReleaseYear,
+            Price = game.Price,
+            CoverUrl = string.IsNullOrWhiteSpace(game.CoverUrl) ? null : game.CoverUrl
+        };
         context.Games.Add(newGame);
         await context.SaveChangesAsync();
 
@@ -49,6 +58,8 @@ public class GameService(AppDbContext context, ILogger<GameService> logger) : IG
         existing.Name = name;
         existing.Genre = game.Genre.Trim();
         existing.ReleaseYear = game.ReleaseYear;
+        existing.Price = game.Price;
+        existing.CoverUrl = string.IsNullOrWhiteSpace(game.CoverUrl) ? null : game.CoverUrl;
         await context.SaveChangesAsync();
 
         logger.LogInformation("Updated game {GameId}", id);

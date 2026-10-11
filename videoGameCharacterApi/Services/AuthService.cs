@@ -7,7 +7,6 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 using videoGameCharacterApi.Data;
 using videoGameCharacterApi.Dtos;
-using videoGameCharacterApi.Exceptions;
 using videoGameCharacterApi.Models;
 using videoGameCharacterApi.Settings;
 
@@ -19,27 +18,47 @@ public class AuthService(AppDbContext context, IOptions<JwtSettings> jwtOptions,
     private readonly JwtSettings _jwt = jwtOptions.Value;
     private readonly PasswordHasher<User> _hasher = new();
 
-    public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
-    {
-        var username = request.Username.Trim();
-        var lower = username.ToLower();
+    public const int MinUsernameLength = 3;
 
-        if (await context.Users.AnyAsync(u => u.Username.ToLower() == lower))
-            throw new BadRequestException("Username is already taken.");
+    public async Task<RegisterResult> RegisterAsync(RegisterRequest request)
+    {
+        // Validate the name as it will be stored (the DTO validation runs before trimming).
+        var username = request.Username.Trim();
+        if (username.Length < MinUsernameLength)
+            return new RegisterResult(RegisterStatus.InvalidUsername);
+
+        var lower = username.ToLowerInvariant();
+        if (await UsernameExistsAsync(lower))
+            return new RegisterResult(RegisterStatus.UsernameTaken);
 
         var user = new User { Username = username };
         user.PasswordHash = _hasher.HashPassword(user, request.Password);
-
         context.Users.Add(user);
-        await context.SaveChangesAsync();
+
+        try
+        {
+            await context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Two sign-ups with the same name at the same time: the unique index on Username
+            // rejects the second one. Report it as "taken" instead of a 500 error.
+            context.Entry(user).State = EntityState.Detached;
+            if (await UsernameExistsAsync(lower))
+                return new RegisterResult(RegisterStatus.UsernameTaken);
+            throw;
+        }
 
         logger.LogInformation("Registered user {Username}", username);
-        return CreateToken(user);
+        return new RegisterResult(RegisterStatus.Success, CreateToken(user));
     }
+
+    private Task<bool> UsernameExistsAsync(string lowerUsername)
+        => context.Users.AnyAsync(u => u.Username.ToLower() == lowerUsername);
 
     public async Task<AuthResponse?> LoginAsync(LoginRequest request)
     {
-        var lower = request.Username.Trim().ToLower();
+        var lower = request.Username.Trim().ToLowerInvariant();
         var user = await context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == lower);
         if (user is null)
             return null;
@@ -64,7 +83,8 @@ public class AuthService(AppDbContext context, IOptions<JwtSettings> jwtOptions,
             Subject = new ClaimsIdentity(new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username)
+                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Role, user.Role)
             }),
             Issuer = _jwt.Issuer,
             Audience = _jwt.Audience,
@@ -75,6 +95,7 @@ public class AuthService(AppDbContext context, IOptions<JwtSettings> jwtOptions,
         return new AuthResponse
         {
             Username = user.Username,
+            Role = user.Role,
             Token = new JsonWebTokenHandler().CreateToken(descriptor),
             ExpiresAt = expiresAt
         };
