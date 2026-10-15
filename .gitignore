@@ -369,3 +369,10 @@ backup-before-changes.tar.gz
 videoGameCharacterApi/wwwroot/uploads/*
 !videoGameCharacterApi/wwwroot/uploads/.gitkeep
 
+
+# Online version: secrets of the hosting server, and the built React site copied into wwwroot
+**/appsettings.Production.json
+videoGameCharacterApi/wwwroot/index.html
+videoGameCharacterApi/wwwroot/assets/
+videoGameCharacterApi/wwwroot/favicon.svg
+videoGameCharacterApi/wwwroot/icons.svg

@@ -36,14 +36,27 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task Register_FirstAccount_IsAdmin()
+    {
+        using var db = TestDb.Create();
+
+        var result = await CreateService(db).RegisterAsync(new RegisterRequest { Username = "eya", Password = "secret123" });
+
+        Assert.Equal(Models.Roles.Admin, result.Response!.Role);
+    }
+
+    [Fact]
     public async Task Register_NewAccount_IsNormalUser()
     {
         using var db = TestDb.Create();
+        var admin = await TestDb.AddUserAsync(db, "boss");
+        admin.Role = Models.Roles.Admin;
+        await db.SaveChangesAsync();
 
         var result = await CreateService(db).RegisterAsync(new RegisterRequest { Username = "player1", Password = "secret123" });
 
         Assert.Equal(Models.Roles.User, result.Response!.Role);
-        Assert.Equal(Models.Roles.User, Assert.Single(db.Users).Role);
+        Assert.Equal(Models.Roles.User, db.Users.Single(u => u.Username == "player1").Role);
     }
 
     [Fact]

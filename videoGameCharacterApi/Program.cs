@@ -69,11 +69,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed starter data in Development (only when the tables are empty)
-if (app.Environment.IsDevelopment())
+// At startup: create / update the database (migrations), then add the starter data.
+// Runs on the PC and on the online server (Azure), so the online site has the same data.
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
     await SeedData.SeedAsync(db);
     await SeedData.FixOldCharactersAsync(db);
     await SeedData.AddMoreCharactersAsync(db);
@@ -101,6 +102,9 @@ app.UseHttpsRedirection();
 app.UseCors(FrontendCorsPolicy);
 
 // Serves the uploaded pictures from wwwroot/uploads
+// Online version: the React site (built with "npm run build") is copied into wwwroot,
+// so "/" opens index.html and the site and the API share the same address.
+app.UseDefaultFiles();
 app.UseStaticFiles();
 
 app.UseAuthentication();

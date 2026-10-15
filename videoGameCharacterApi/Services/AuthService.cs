@@ -31,7 +31,9 @@ public class AuthService(AppDbContext context, IOptions<JwtSettings> jwtOptions,
         if (await UsernameExistsAsync(lower))
             return new RegisterResult(RegisterStatus.UsernameTaken);
 
-        var user = new User { Username = username };
+        // The very first account of the site becomes admin (useful on a new online database).
+        var hasAdmin = await context.Users.AnyAsync(u => u.Role == Roles.Admin);
+        var user = new User { Username = username, Role = hasAdmin ? Roles.User : Roles.Admin };
         user.PasswordHash = _hasher.HashPassword(user, request.Password);
         context.Users.Add(user);
 
